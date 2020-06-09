@@ -11,8 +11,10 @@
 
 Еще считаются паузы; обозначаются р0х, где х - длительность паузы
 
-Пример:
+#### Пример:
+
 ![таблица с переводом нот](pictures/table.jpg)
+
 ```
 note_on channel=8 note=58 velocity=96 time=2
 note_off channel=8 note=58 velocity=0 time=183
