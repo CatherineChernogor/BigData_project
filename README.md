@@ -1,6 +1,7 @@
 # BigData_project
- 
-Ссылка на датасет - https://www.kaggle.com/sabermalek/iranian-traditional-music
+
+Ссылка на презентацию - https://docs.google.com/presentation/d/1Ygeaudq4XOG2VIjf8b0sd6H-pwybjZN-b9KV6Y8dx3k/edit?usp=sharing 
+Ссылка на датасет - https://www.kaggle.com/function9/blues-genre-midi-melodies
 
 ## Перевод в ноты и из нот
 
