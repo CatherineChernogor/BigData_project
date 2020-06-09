@@ -1,6 +1,4 @@
 #!/usr/bin/python3
-
-
 from mido import Message, MidiFile, MidiTrack, tick2second
 import gensim.corpora as corpora
 from keras.utils import np_utils
@@ -101,21 +99,16 @@ for file in files:
                     if (msg.time/(ticks*4) > 0.05):
                         res = convert_to_note(note, off/(ticks*4))
                         seq.append(res)
-                        #print (str(note) + ' ' + str(off/(ticks*4)) +  ' ' + str(res))
                         res = convert_to_note(-1, (msg.time)/(ticks*4))
                         seq.append(res)
-                        #print ('pause ' + str((msg.time)/(ticks*4)) + ' ' + str(res))
                         off = 0
                     else:
                         res = convert_to_note(note, (msg.time+off)/(ticks*4))
                         seq.append(res)
-                        #print (str(note) + ' ' + str((msg.time+off)/(ticks*4)) + ' ' + str(res))
-
                 else:
                     if (sound == 1):
                         res = convert_to_note(note, (msg.time)/(ticks*4))
                         seq.append(res)
-                        #print (str(note) + ' ' + str((msg.time)/(ticks*4)) + ' ' + str(res))
                 sound = sound+1
                 note = msg.note
             else:
@@ -125,8 +118,6 @@ for file in files:
                     sound = sound-1
         res = convert_to_note(note, (off)/(ticks*4))
         seq.append(res)
-        #print (str(note) + ' ' + str(off/(ticks*4)) + ' ' + str(res))
-        # print(seq)
 
 np.random.seed(50)
 alphabet = seq
@@ -147,7 +138,6 @@ for i in range(0, len(alphabet) - seq_length, 1):
     seq_out = alphabet[i + seq_length]
     dataX.append([note_to_int[note] for note in seq_in])
     dataY.append(note_to_int[seq_out])
-    #print(seq_in, '->', seq_out)
 
 # Предсказание нот
 # здесь берется последовательность из 10 нот из рандомного места 
@@ -177,8 +167,6 @@ for i in range(0, num_pred_notes):
     data_train[0][0][8] = data_train[0][0][9]
     data_train[0][0][9] = index/(float(len(alphabet)))
 
-
-#print(generated_melody)
 
 # создание файла
 mid = MidiFile()

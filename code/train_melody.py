@@ -92,21 +92,16 @@ for file in files:
                     if (msg.time/(ticks*4) > 0.05):
                         res = convert_to_note(note, off/(ticks*4))
                         seq.append(res)
-                        #print (str(note) + ' ' + str(off/(ticks*4)) +  ' ' + str(res))
                         res = convert_to_note(-1, (msg.time)/(ticks*4))
                         seq.append(res)
-                        #print ('pause ' + str((msg.time)/(ticks*4)) + ' ' + str(res))
                         off = 0
                     else:
                         res = convert_to_note(note, (msg.time+off)/(ticks*4))
                         seq.append(res)
-                        #print (str(note) + ' ' + str((msg.time+off)/(ticks*4)) + ' ' + str(res))
-
                 else:
                     if (sound == 1):
                         res = convert_to_note(note, (msg.time)/(ticks*4))
                         seq.append(res)
-                        #print (str(note) + ' ' + str((msg.time)/(ticks*4)) + ' ' + str(res))
                 sound = sound+1
                 note = msg.note
             else:
@@ -116,8 +111,7 @@ for file in files:
                     sound = sound-1
         res = convert_to_note(note, (off)/(ticks*4))
         seq.append(res)
-        #print (str(note) + ' ' + str(off/(ticks*4)) + ' ' + str(res))
-        # print(seq)
+
 
 np.random.seed(50)
 alphabet = seq
@@ -155,38 +149,12 @@ model.fit(X, y, epochs=100, batch_size=1, verbose=2)
 scores = model.evaluate(X, y, verbose=0)
 print("Model Accuracy: %.2f%%" % (scores[1]*100))
 
-
-#r = int(random.uniform(0, len(dataX)/2))
-#data_train = np.reshape(dataX[r], (1, 1, len(dataX[r])))
-#generated_melody = []
-#for i in range(0, seq_length-1):
-#    generated_melody.append(int_to_note[data_train[0][0][i]])
-#data_train = data_train/(float(len(alphabet)))
-#
-#for i in range(0, num_pred_notes):
-#    prediction = model.predict(data_train, verbose=0)
-#    index = np.argmax(prediction)
-#    result = int_to_note[index]
-#    generated_melody.append(result)
-#    data_train[0][0][0] = data_train[0][0][1]
-#    data_train[0][0][1] = data_train[0][0][2]
-#    data_train[0][0][2] = data_train[0][0][3]
-#    data_train[0][0][3] = data_train[0][0][4]
-#    data_train[0][0][4] = data_train[0][0][5]
-#    data_train[0][0][5] = data_train[0][0][6]
-#    data_train[0][0][6] = data_train[0][0][7]
-#    data_train[0][0][7] = data_train[0][0][8]
-#    data_train[0][0][8] = data_train[0][0][9]
-#    data_train[0][0][9] = index/(float(len(alphabet)))
-#    print(data_train)
-#
-#
-#print(generated_melody)
-
+#сохранение модели
 import pickle
 
 save = pickle.dumps(model)
 f = open("model", "wb")
 f.write(save)
 f.close()
+
 
