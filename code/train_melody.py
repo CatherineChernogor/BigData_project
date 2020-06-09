@@ -1,17 +1,15 @@
 #!/usr/bin/python3
-import random  # отсюда и до конца - блок похожий на тот, что закомментирован выше. Но здесь берется последовательность из 3 нот из рандомного места и следующая нота прелсказывается по 3 нотам со смещением на ту ноту, которую система предсказала сама
-from keras.layers import LSTM
-import pickle
+import random 
 import gensim.corpora as corpora
-from keras.layers.advanced_activations import LeakyReLU
 from keras.utils import np_utils
 from keras.layers import Dense
-from keras.models import Sequential
-import numpy
-from mido import MidiFile
-from mido import tick2second
+from keras.models import Sequential, LSTM
+import numpy as np 
+from mido import MidiFile, tick2second
 from os import listdir
 from os.path import isfile, join
+
+# загрузка данных 
 files = [f for f in listdir("./blues/") if isfile(join("./blues/", f))]
 num_pred_notes = 150
 
@@ -76,6 +74,7 @@ def convert_from_note(string):
     return(note_number, time)
 
 
+# подготовка данных, работа с Midifiles
 seq = []  # последовательность нот, октав и их длительностей
 for file in files:
     mid = MidiFile("./blues/" + file)
@@ -84,6 +83,7 @@ for file in files:
     note = 0
     pause = 0
     off = 0
+    
     # цикл для получения последовательности из сообщений
     for i, track in enumerate(mid.tracks):
         for msg in track:
@@ -119,18 +119,18 @@ for file in files:
         #print (str(note) + ' ' + str(off/(ticks*4)) + ' ' + str(res))
         # print(seq)
 
-numpy.random.seed(50)
+np.random.seed(50)
 alphabet = seq
 
 
 # формирование словарей из нот в номер и из номера в ноту
-seq2 = numpy.reshape(seq, (len(seq), 1))
+seq2 = np.reshape(seq, (len(seq), 1))
 int_to_note = corpora.Dictionary(seq2)
 note_to_int = {}
 for key, value in int_to_note.items():
     note_to_int.setdefault(value, key)
 
-seq_length = 10  # это из лекции
+seq_length = 10 
 dataX = []
 dataY = []
 for i in range(0, len(alphabet) - seq_length, 1):
@@ -140,50 +140,50 @@ for i in range(0, len(alphabet) - seq_length, 1):
     dataY.append(note_to_int[seq_out])
     print(seq_in, '->', seq_out)
 
-
-X = numpy.reshape(dataX, (len(dataX), 1, seq_length))  # и это из лекции
+X = np.reshape(dataX, (len(dataX), 1, seq_length))  
 X = X / float(len(alphabet))
 print(X)
 y = np_utils.to_categorical(dataY)
+
+# работа с нейросетью
 model = Sequential()
-model.add(LSTM(128, input_shape=(
-    X.shape[1], X.shape[2]), return_sequences=True))
-model.add(LSTM(128, input_shape=(
-    X.shape[1], X.shape[2]), return_sequences=False))
-model.add(LeakyReLU(0.2))
+model.add(LSTM(128, input_shape=(X.shape[1], X.shape[2]), return_sequences=True))
+model.add(LSTM(128, input_shape=(X.shape[1], X.shape[2]), return_sequences=False))
 model.add(Dense(y.shape[1], activation='softmax'))
-model.compile(loss='categorical_crossentropy',
-              optimizer='adam', metrics=['accuracy'])
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 model.fit(X, y, epochs=100, batch_size=1, verbose=2)
 scores = model.evaluate(X, y, verbose=0)
 print("Model Accuracy: %.2f%%" % (scores[1]*100))
 
-r = int(random.uniform(0, len(dataX)/2))
-data_train = numpy.reshape(dataX[r], (1, 1, len(dataX[r])))
-generated_melody = []
-for i in range(0, seq_length-1):
-    generated_melody.append(int_to_note[data_train[0][0][i]])
-data_train = data_train/(float(len(alphabet)))
 
-for i in range(0, num_pred_notes):
-    prediction = model.predict(data_train, verbose=0)
-    index = numpy.argmax(prediction)
-    result = int_to_note[index]
-    generated_melody.append(result)
-    data_train[0][0][0] = data_train[0][0][1]
-    data_train[0][0][1] = data_train[0][0][2]
-    data_train[0][0][2] = data_train[0][0][3]
-    data_train[0][0][3] = data_train[0][0][4]
-    data_train[0][0][4] = data_train[0][0][5]
-    data_train[0][0][5] = data_train[0][0][6]
-    data_train[0][0][6] = data_train[0][0][7]
-    data_train[0][0][7] = data_train[0][0][8]
-    data_train[0][0][8] = data_train[0][0][9]
-    data_train[0][0][9] = index/(float(len(alphabet)))
-    print(data_train)
+#r = int(random.uniform(0, len(dataX)/2))
+#data_train = np.reshape(dataX[r], (1, 1, len(dataX[r])))
+#generated_melody = []
+#for i in range(0, seq_length-1):
+#    generated_melody.append(int_to_note[data_train[0][0][i]])
+#data_train = data_train/(float(len(alphabet)))
+#
+#for i in range(0, num_pred_notes):
+#    prediction = model.predict(data_train, verbose=0)
+#    index = np.argmax(prediction)
+#    result = int_to_note[index]
+#    generated_melody.append(result)
+#    data_train[0][0][0] = data_train[0][0][1]
+#    data_train[0][0][1] = data_train[0][0][2]
+#    data_train[0][0][2] = data_train[0][0][3]
+#    data_train[0][0][3] = data_train[0][0][4]
+#    data_train[0][0][4] = data_train[0][0][5]
+#    data_train[0][0][5] = data_train[0][0][6]
+#    data_train[0][0][6] = data_train[0][0][7]
+#    data_train[0][0][7] = data_train[0][0][8]
+#    data_train[0][0][8] = data_train[0][0][9]
+#    data_train[0][0][9] = index/(float(len(alphabet)))
+#    print(data_train)
+#
+#
+#print(generated_melody)
 
-
-print(generated_melody)
+import pickle
 
 save = pickle.dumps(model)
 f = open("model", "wb")

@@ -1,30 +1,29 @@
 #!/usr/bin/python3
-import random  # здесь берется последовательность из 10 нот из рандомного места и следующая нота предсказывается по 10 нотам со смещением на ту ноту, которую система предсказала сама
-from mido import MidiFile
-from mido import Message, MidiFile, MidiTrack
+
+
+from mido import Message, MidiFile, MidiTrack, tick2second
 import gensim.corpora as corpora
 from keras.utils import np_utils
-import numpy
 from os.path import isfile, join
 from os import listdir
-from mido import tick2second
 import sys
-from sklearn.datasets import load_files
+import numpy as np
+import random 
+#from sklearn.datasets import load_files
 import pickle
 
+# загружаем данные
 f = open("model", "rb")
 s = f.read()
 f.close()
 model = pickle.loads(s)
 
-files = [f for f in listdir("./blues/") if isfile(join("./blues/", f))]
+files = [f for f in listdir("./train_data/blues/") if isfile(join(".train_data/blues/", f))]
 num_pred_notes = 150
-
 
 # перевод в формат NOV - где N - нота; O - октава; V - длительность. Заглавная N - с диезом, строчная n - без
 def convert_to_note(note, time):
-    if (time == 0):
-        return ''
+
     alphabet = ['c', 'C', 'd', 'D', 'e', 'f', 'F',
                 'g', 'G', 'a', 'A', 'b', 'p']  # p - пауза
     octave = int(abs(note/12))
@@ -84,6 +83,7 @@ def convert_from_note(string):
 
     return(note_number, time)
 
+# Подготовка данных, работа с MidiFile
 
 seq = []  # последовательность нот, октав и их длительностей
 for file in files:
@@ -128,12 +128,12 @@ for file in files:
         #print (str(note) + ' ' + str(off/(ticks*4)) + ' ' + str(res))
         # print(seq)
 
-numpy.random.seed(50)
+np.random.seed(50)
 alphabet = seq
 
 
 # формирование словарей из нот в номер и из номера в ноту
-seq2 = numpy.reshape(seq, (len(seq), 1))
+seq2 = np.reshape(seq, (len(seq), 1))
 int_to_note = corpora.Dictionary(seq2)
 note_to_int = {}
 for key, value in int_to_note.items():
@@ -147,10 +147,15 @@ for i in range(0, len(alphabet) - seq_length, 1):
     seq_out = alphabet[i + seq_length]
     dataX.append([note_to_int[note] for note in seq_in])
     dataY.append(note_to_int[seq_out])
-    print(seq_in, '->', seq_out)
+    #print(seq_in, '->', seq_out)
+
+# Предсказание нот
+# здесь берется последовательность из 10 нот из рандомного места 
+# и следующая нота предсказывается по 10 нотам со смещением на ту ноту, 
+# которую система предсказала сама
 
 r = int(random.uniform(0, len(dataX)/2))
-data_train = numpy.reshape(dataX[r], (1, 1, len(dataX[r])))
+data_train = np.reshape(dataX[r], (1, 1, len(dataX[r])))
 generated_melody = []
 for i in range(0, seq_length-1):
     generated_melody.append(int_to_note[data_train[0][0][i]])
@@ -158,7 +163,7 @@ data_train = data_train/(float(len(alphabet)))
 
 for i in range(0, num_pred_notes):
     prediction = model.predict(data_train, verbose=0)
-    index = numpy.argmax(prediction)
+    index = np.argmax(prediction)
     result = int_to_note[index]
     generated_melody.append(result)
     data_train[0][0][0] = data_train[0][0][1]
@@ -173,23 +178,22 @@ for i in range(0, num_pred_notes):
     data_train[0][0][9] = index/(float(len(alphabet)))
 
 
-print(generated_melody)
+#print(generated_melody)
 
-
+# создание файла
 mid = MidiFile()
 track = MidiTrack()
 mid.tracks.append(track)
 mid.ticks_per_beat = 192
 
+# конвертация в мелодию
 t = 10
 track.append(Message('program_change', program=12, time=0))
 for i in range(0, len(generated_melody)):
     gen_note, gen_time = convert_from_note(generated_melody[i])
     if (gen_note > 0):
-        track.append(Message('note_on', note=gen_note,
-                             velocity=100, time=int(t)))
-        track.append(Message('note_off', note=gen_note,
-                             velocity=0, time=int(gen_time*768)))
+        track.append(Message('note_on', note=gen_note, velocity=100, time=int(t)))
+        track.append(Message('note_off', note=gen_note,velocity=0, time=int(gen_time*768)))
         t = 10
     else:
         t = gen_time*768
