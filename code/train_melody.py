@@ -11,7 +11,7 @@ from os.path import isfile, join
 
 # загрузка данных 
 files = [f for f in listdir("./blues/") if isfile(join("./blues/", f))]
-num_pred_notes = 150
+num_pred_notes = 150 #количество предсказываемых нот
 
 
 # перевод в формат NOV - где N - нота; O - октава; V - длительность. Заглавная N - с диезом, строчная n - без
@@ -20,7 +20,7 @@ def convert_to_note(note, time):
                 'g', 'G', 'a', 'A', 'b', 'p']  # p - пауза
     octave = int(abs(note/12))
     ton = alphabet[note % 12]
-    value = 0
+    value = 0               #длительность
     if (note < 0):
         ton = alphabet[12]
     if (time > 0 and time <= 0.09375):
@@ -123,6 +123,18 @@ int_to_note = corpora.Dictionary(seq2)
 note_to_int = {}
 for key, value in int_to_note.items():
     note_to_int.setdefault(value, key)
+ 
+import pickle
+
+save=pickle.dumps(int_to_note)
+f=open("int_to_note","wb")
+f.write(save)
+f.close()
+
+save=pickle.dumps(note_to_int)
+f=open("note_to_int","wb")
+f.write(save)
+f.close()
 
 seq_length = 10 
 dataX = []
@@ -131,8 +143,7 @@ for i in range(0, len(alphabet) - seq_length, 1):
     seq_in = alphabet[i:i + seq_length]
     seq_out = alphabet[i + seq_length]
     dataX.append([note_to_int[note] for note in seq_in])
-    dataY.append(note_to_int[seq_out])
-    print(seq_in, '->', seq_out)
+    dataY.append(note_to_int[seq_out]
 
 X = np.reshape(dataX, (len(dataX), 1, seq_length))  
 X = X / float(len(alphabet))
@@ -150,8 +161,6 @@ scores = model.evaluate(X, y, verbose=0)
 print("Model Accuracy: %.2f%%" % (scores[1]*100))
 
 #сохранение модели
-import pickle
-
 save = pickle.dumps(model)
 f = open("model", "wb")
 f.write(save)
