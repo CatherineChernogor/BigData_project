@@ -16,6 +16,16 @@ s = f.read()
 f.close()
 model = pickle.loads(s)
 
+f=open("int_to_note","rb")
+s=f.read()
+f.close()
+int_to_note=pickle.loads(s)
+
+f=open("note_to_int","rb")
+s=f.read()
+f.close()
+note_to_int=pickle.loads(s)
+
 files = [f for f in listdir("./train_data/blues/") if isfile(join(".train_data/blues/", f))]
 num_pred_notes = 150
 
@@ -122,22 +132,11 @@ for file in files:
 np.random.seed(50)
 alphabet = seq
 
-
-# формирование словарей из нот в номер и из номера в ноту
-seq2 = np.reshape(seq, (len(seq), 1))
-int_to_note = corpora.Dictionary(seq2)
-note_to_int = {}
-for key, value in int_to_note.items():
-    note_to_int.setdefault(value, key)
-
 seq_length = 10
 dataX = []
-dataY = []
 for i in range(0, len(alphabet) - seq_length, 1):
     seq_in = alphabet[i:i + seq_length]
-    seq_out = alphabet[i + seq_length]
     dataX.append([note_to_int[note] for note in seq_in])
-    dataY.append(note_to_int[seq_out])
 
 # Предсказание нот
 # здесь берется последовательность из 10 нот из рандомного места 
@@ -186,4 +185,4 @@ for i in range(0, len(generated_melody)):
     else:
         t = gen_time*768
 
-mid.save('pred_melody5.mid')
+mid.save('pred_melody.mid')
