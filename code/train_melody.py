@@ -2,8 +2,8 @@
 import random 
 import gensim.corpora as corpora
 from keras.utils import np_utils
-from keras.layers import Dense
-from keras.models import Sequential, LSTM
+from keras.layers import Dense, LSTM
+from keras.models import Sequential
 import numpy as np 
 from mido import MidiFile, tick2second
 from os import listdir
@@ -140,23 +140,23 @@ seq_length = 10
 dataX = []
 dataY = []
 for i in range(0, len(alphabet) - seq_length, 1):
-    seq_in = alphabet[i:i + seq_length]
-    seq_out = alphabet[i + seq_length]
-    dataX.append([note_to_int[note] for note in seq_in])
-    dataY.append(note_to_int[seq_out]
+ seq_in = alphabet[i:i + seq_length]
+ seq_out = alphabet[i + seq_length]
+ dataX.append([note_to_int[note] for note in seq_in])
+ dataY.append(note_to_int[seq_out])
 
-X = np.reshape(dataX, (len(dataX), 1, seq_length))  
+X = np.reshape(dataX, (len(dataX), 1, seq_length)) 
 X = X / float(len(alphabet))
-print(X)
+print (X)
 y = np_utils.to_categorical(dataY)
 
 # работа с нейросетью
 model = Sequential()
-model.add(LSTM(128, input_shape=(X.shape[1], X.shape[2]), return_sequences=True))
-model.add(LSTM(128, input_shape=(X.shape[1], X.shape[2]), return_sequences=False))
+model.add(LSTM(256, input_shape=(X.shape[1], X.shape[2]), return_sequences=True))
+model.add(LSTM(256, input_shape=(X.shape[1], X.shape[2]), return_sequences=False))
 model.add(Dense(y.shape[1], activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-model.fit(X, y, epochs=100, batch_size=1, verbose=2)
+model.fit(X, y, epochs=400, batch_size=1, verbose=2)
 scores = model.evaluate(X, y, verbose=0)
 print("Model Accuracy: %.2f%%" % (scores[1]*100))
 
@@ -165,5 +165,3 @@ save = pickle.dumps(model)
 f = open("model", "wb")
 f.write(save)
 f.close()
-
-
